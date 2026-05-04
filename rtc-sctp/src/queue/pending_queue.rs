@@ -110,4 +110,9 @@ impl PendingQueue {
     pub(crate) fn is_empty(&self) -> bool {
         self.len() == 0
     }
+
+    pub(crate) fn any(&self, predicate: impl Fn(&ChunkPayloadData) -> bool) -> bool {
+        self.ordered_queue.iter().any(&predicate)
+        || self.unordered_queue.iter().any(&predicate)
+    }
 }

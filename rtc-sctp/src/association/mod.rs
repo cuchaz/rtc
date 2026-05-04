@@ -2874,8 +2874,19 @@ impl Association {
 impl shared::WriteQueueQuiescence for Association {
     fn is_write_queue_empty(&self) -> bool {
 
-        // only look at the pending queue,
+        // only look for messages in the pending queue,
+        // (but filter out any control messages)
         // since those are messages that haven't been sent to the write_outs yet
-        self.pending_queue.is_empty()
+        fn is_data_message(data: &ChunkPayloadData) -> bool {
+            match &data.payload_type {
+                PayloadProtocolIdentifier::Dcep => false,
+                PayloadProtocolIdentifier::String => true,
+                PayloadProtocolIdentifier::Binary => true,
+                PayloadProtocolIdentifier::StringEmpty => true,
+                PayloadProtocolIdentifier::BinaryEmpty => true,
+                PayloadProtocolIdentifier::Unknown => false
+            }
+        }
+        !self.pending_queue.any(is_data_message)
     }
 }
