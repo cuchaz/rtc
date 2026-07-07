@@ -2884,7 +2884,17 @@ impl shared::WriteQueueQuiescence for Association {
                 PayloadProtocolIdentifier::Binary => true,
                 PayloadProtocolIdentifier::StringEmpty => true,
                 PayloadProtocolIdentifier::BinaryEmpty => true,
-                PayloadProtocolIdentifier::Unknown => false
+                PayloadProtocolIdentifier::Unknown => {
+                    // end-of-stream messages use the Unknown identifier,
+                    // but they have zero-length user_data
+                    if data.user_data.len() == 0 {
+                        // end-of-stream message! count it as part of the write queue
+                        true
+                    } else {
+                        // some other message ... who knows
+                        false
+                    }
+                }
             }
         }
         !self.pending_queue.any(is_data_message)
